@@ -1,0 +1,2 @@
+qovery-client==0.1.0
+Flask==1.0.2
