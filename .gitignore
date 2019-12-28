@@ -94,6 +94,3 @@ ipython_config.py
 
 # celery beat schedule file
 celerybeat-schedule
-
-.qovery
-local_configuration.json
