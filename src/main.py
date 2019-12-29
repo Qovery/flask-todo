@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import json
 
 import flask
 import psycopg2
-from flask import jsonify
+from flask import jsonify, Response
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from qovery_client.qovery import Qovery
 
@@ -42,11 +43,25 @@ for query in queries:
 # --- END INIT ---
 
 class Todo(object):
-    def __init__(self, row):
-        self.id = row[0]
-        self.created_at = row[1]
-        self.title = row[2]
-        self.description = row[3]
+    def __init__(self, row_tuple=None, json_dict=None):
+
+        self.id = None
+        self.created_at = None
+        self.title = None
+        self.description = None
+
+        if row_tuple:
+            self.id = row_tuple[0]
+            self.created_at = row_tuple[1]
+            self.title = row_tuple[2]
+            self.description = row_tuple[3]
+
+        if json_dict:
+            if 'title' in json_dict:
+                self.title = json_dict['title']
+
+            if 'description' in json_dict:
+                self.description = json_dict['description']
 
     @property
     def to_json_dict(self):
@@ -57,6 +72,13 @@ class Todo(object):
             'description': self.description
         }
 
+    @property
+    def error_message(self):
+        if not self.title:
+            return 'title field is mandatory'
+
+        return None
+
 
 @app.route('/api/todo', methods=['GET'])
 def list_todo():
@@ -65,29 +87,42 @@ def list_todo():
     cursor.execute('SELECT * FROM todo')
 
     for row in cursor.fetchall():
-        results.append(Todo(row).to_json_dict)
+        results.append(Todo(row_tuple=row).to_json_dict)
 
     return jsonify({'results': results})
 
 
 @app.route('/api/todo', methods=['POST'])
 def add_todo():
-    return jsonify({})
+    json_dict = flask.request.get_json()
+    todo = Todo(json_dict=json_dict)
+
+    if todo.error_message:
+        return Response(json.dumps({'error_message': todo.error_message}), status=400)
+
+    cursor.execute('INSERT INTO todo (title, description) VALUES (%s, %s) RETURNING id, created_at, title, description',
+                   (todo.title, todo.description,))
+
+    resp = cursor.fetchone()
+
+    return Response(json.dumps(Todo(row_tuple=resp).to_json_dict), status=201)
 
 
 @app.route('/api/todo/<id>', methods=['GET'])
 def get_todo(id):
-    return jsonify({})
+    cursor.execute('SELECT * FROM todo WHERE id = %s LIMIT 1', (id,))
+
+    resp = cursor.fetchone()
+    if not resp:
+        return jsonify()
+
+    return jsonify(Todo(row_tuple=resp).to_json_dict)
 
 
 @app.route('/api/todo/<id>', methods=['DELETE'])
 def delete_todo(id):
-    return jsonify({'result': 'ok'})
-
-
-@app.route('/api/todo/<id>', methods=['PUT'])
-def update_todo(id):
-    return jsonify({})
+    cursor.execute('DELETE FROM todo WHERE id = %s', (id,))
+    return '', 204
 
 
 if __name__ == '__main__':
