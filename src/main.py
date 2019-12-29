@@ -87,8 +87,13 @@ def index():
     if not branch_name:
         branch_name = 'unknown'
 
-    return "<h1>Welcome :)</h1><p>The current branch is <b>" + branch_name + "</b></p><p>Project source code available " \
-                                                                             "<a href='https://github.com/evoxmusic/flask-todo'>here</a></p>"
+    return "<h1>Welcome :)</h1><p>The current branch is <b>" + branch_name + "</b></p><p>Source code available " \
+                                                                             "<a href='https://github.com/evoxmusic/flask-todo'>here</a></p>" \
+                                                                             "<p>API resources available:</p>" \
+                                                                             "<ul><li>GET /api/todo -> to list todo</li>" \
+                                                                             "<li>GET /api/todo/:id -> to show todo by id</li>" \
+                                                                             "<li>POST /api/todo -> to add todo</li>" \
+                                                                             "<li>DELETE /api/todo/:id -> to delete todo by id</li></ul>"
 
 
 @app.route('/api/todo', methods=['GET'])
