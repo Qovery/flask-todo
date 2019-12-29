@@ -13,12 +13,10 @@ app = flask.Flask(__name__)
 
 # this file is not used while deployed on Qovery
 configuration_file_path = '../.qovery/local_configuration.json'
-# the database name comes from .qovery.yml file
-database_name = 'my-postgresql'  # TODO change
 
 # get database configuration from Qovery
 qovery = Qovery(configuration_file_path=configuration_file_path)
-db_conf = qovery.get_database_by_name(database_name)
+db_conf = qovery.databases[0]
 
 # Setup PostgreSQL
 conn = psycopg2.connect(host=db_conf.host, user=db_conf.username, database='postgres', password=db_conf.password, port=db_conf.port)
