@@ -17,7 +17,8 @@ configuration_file_path = '../.qovery/local_configuration.json'
 database_name = 'my-postgresql-3498225'
 
 # get database configuration from Qovery
-db_conf = Qovery(configuration_file_path=configuration_file_path).get_database_by_name(database_name)
+qovery = Qovery(configuration_file_path=configuration_file_path)
+db_conf = qovery.get_database_by_name(database_name)
 
 # Setup PostgreSQL
 conn = psycopg2.connect(host=db_conf.host, user=db_conf.username, database='postgres', password=db_conf.password, port=db_conf.port)
@@ -78,6 +79,16 @@ class Todo(object):
             return 'title field is mandatory'
 
         return None
+
+
+@app.route('/', methods=['GET'])
+def index():
+    branch_name = qovery.branch_name
+    if not branch_name:
+        branch_name = 'unknown'
+
+    return "<h1>Welcome :)</h1><p>The current branch is <b>" + branch_name + "</b></p><p>Project source code available " \
+                                                                             "<a href='https://github.com/evoxmusic/flask-todo'>here</a></p>"
 
 
 @app.route('/api/todo', methods=['GET'])
